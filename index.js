@@ -29,6 +29,21 @@ async function run() {
         const galleryCollection = client.db("carToysDB").collection("ToyGallery");
         const toyCollection = client.db("carToysDB").collection("addToy");
 
+
+        const indexKeys = {name:1};
+        const indexOptions = {toy_name:"toy_name"};
+        const result = await toyCollection.createIndex(indexKeys, indexOptions);
+        console.log(result)
+
+        app.get('/toySearchByName/:text', async (req, res) => {
+            const searchText = req.params.text;
+            const result = await toyCollection.find({
+                "data.name": { $regex: searchText, $options: "i" }
+            }).toArray();
+            res.send(result);
+        })
+
+
         app.get('/gallery', async (req, res) => {
             console.log(req.query);
             const result = await galleryCollection.find({}).toArray();
