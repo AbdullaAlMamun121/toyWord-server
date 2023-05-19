@@ -41,6 +41,15 @@ async function run() {
                 "data.name": { $regex: searchText, $options: "i" }
             }).toArray();
             res.send(result);
+        });
+
+        app.get('/myToys/:email', async (req, res) => {
+            console.log(req.params.email)
+            const result = await toyCollection.find({
+                "data.sellerEmail":req.params.email
+            }).toArray();
+            res.send(result);
+            console.log(result)
         })
 
 
@@ -68,8 +77,9 @@ async function run() {
             const addToy = req.body;
             const result = await toyCollection.insertOne(addToy);
             res.send(result);
-        })
+        });
 
+    
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
