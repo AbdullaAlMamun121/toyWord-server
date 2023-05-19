@@ -79,7 +79,30 @@ async function run() {
             res.send(result);
         });
 
-    
+
+        app.put('/updateMyToy/:id',async (req, res) => {
+            const id = req.params.id;
+            const body = req.body;
+            console.log(body)
+            const filter = { _id: new ObjectId(id) };
+            const updateMyToy = { 
+                $set:{
+                    "data.price":body.price,
+                    "data.quantity":body.quantity,
+                    "data.description":body.description,
+                }
+             };
+             const result = await toyCollection.updateOne(filter,updateMyToy);
+             res.send(result);
+        })
+
+        app.delete('/myToys/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await toyCollection.deleteOne(query);
+            res.send(result);
+        });
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
