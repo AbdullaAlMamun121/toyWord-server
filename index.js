@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 require('dotenv').config();
-const { MongoClient, ServerApiVersion ,ObjectId} = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require('cors');
 const port = process.env.PORT || 5000;
 
@@ -30,8 +30,8 @@ async function run() {
         const toyCollection = client.db("carToysDB").collection("addToy");
 
 
-        const indexKeys = {name:1};
-        const indexOptions = {toy_name:"toy_name"};
+        const indexKeys = { name: 1 };
+        const indexOptions = { toy_name: "toy_name" };
         const result = await toyCollection.createIndex(indexKeys, indexOptions);
         console.log(result)
 
@@ -43,14 +43,25 @@ async function run() {
             res.send(result);
         });
 
+
         app.get('/myToys/:email', async (req, res) => {
-            console.log(req.params.email)
-            const result = await toyCollection.find({
-                "data.sellerEmail":req.params.email
-            }).toArray();
-            res.send(result);
-            console.log(result)
-        })
+            const { sortBy, sortOrder } = req.query;
+
+            try {
+                const result = await toyCollection
+                    .find({ 'data.sellerEmail': req.params.email })
+                    .sort({ "data.price": sortOrder === 'desc' ? -1 : 1 })
+                    .toArray();
+
+                res.send(result);
+            } catch (error) {
+                console.error('Error retrieving toys:', error);
+                res.status(500).send('Internal Server Error');
+            }
+        });
+
+
+
 
 
         app.get('/gallery', async (req, res) => {
@@ -80,20 +91,20 @@ async function run() {
         });
 
 
-        app.put('/updateMyToy/:id',async (req, res) => {
+        app.put('/updateMyToy/:id', async (req, res) => {
             const id = req.params.id;
             const body = req.body;
             console.log(body)
             const filter = { _id: new ObjectId(id) };
-            const updateMyToy = { 
-                $set:{
-                    "data.price":body.price,
-                    "data.quantity":body.quantity,
-                    "data.description":body.description,
+            const updateMyToy = {
+                $set: {
+                    "data.price": body.price,
+                    "data.quantity": body.quantity,
+                    "data.description": body.description,
                 }
-             };
-             const result = await toyCollection.updateOne(filter,updateMyToy);
-             res.send(result);
+            };
+            const result = await toyCollection.updateOne(filter, updateMyToy);
+            res.send(result);
         })
 
         app.delete('/myToys/:id', async (req, res) => {
@@ -113,9 +124,6 @@ async function run() {
     }
 }
 run().catch(console.dir);
-
-
-
 
 
 app.get('/', (req, res) => {
