@@ -46,21 +46,34 @@ async function run() {
 
         app.get('/myToys/:email', async (req, res) => {
             const { sortBy, sortOrder } = req.query;
+            const sortOptions = {};
+
+            if (sortBy === "price") {
+                sortOptions["data.price"] = sortOrder === 'desc' ? -1 : 1;
+            }
 
             try {
                 const result = await toyCollection
                     .find({ 'data.sellerEmail': req.params.email })
-                    .sort({ "data.price": sortOrder === 'desc' ? -1 : 1 })
                     .toArray();
 
+                // Convert price from string to number
+                result.forEach(toy => {
+                    toy.data.price = parseInt(toy.data.price);
+                });
+
+                // Sort the result based on numeric price
+                if (sortBy === "price") {
+                    result.sort((a, b) => {
+                        return sortOrder === 'desc' ? b.data.price - a.data.price : a.data.price - b.data.price;
+                    });
+                }
                 res.send(result);
             } catch (error) {
                 console.error('Error retrieving toys:', error);
                 res.status(500).send('Internal Server Error');
             }
         });
-
-
 
 
 
@@ -93,6 +106,7 @@ async function run() {
 
         app.put('/updateMyToy/:id', async (req, res) => {
             const id = req.params.id;
+            console.log(id);
             const body = req.body;
             console.log(body)
             const filter = { _id: new ObjectId(id) };
